@@ -1,4 +1,4 @@
-# Project: Digital Art Showcase (Cloud Deployment - YOUR_NAME)
+# Project: Digital Art Showcase (Cloud Deployment - MetroArt)
 
 This project is a cloud-based web application for showcasing digital art, deployed on AWS infrastructure following modern cloud-native principles. It consists of a React frontend and a Node.js backend, with separate deployments.
 
