@@ -1,8 +1,7 @@
-# Cloud Deployment Guide: Digital Art Showcase (YOUR_NAME)
+# Cloud Deployment Guide: Digital Art Showcase (MetroArt)
 
 This guide details the steps to deploy the two-component (Frontend on Elastic Beanstalk, Backend on EC2 with Docker) Digital Art Showcase application to AWS.
 
-**Your Name/Group Name:** `YOUR_NAME_HERE` (Remember to include this in resource names!)
 
 **Prerequisites:**
 1.  An AWS Account.
