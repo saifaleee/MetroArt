@@ -16,16 +16,15 @@ const router = express.Router();
 // Public routes
 router.get('/', getAllArtPieces);
 router.get('/image/:key', serveImage); // Route for serving images
+// Add the detail endpoint as a public route first - important!
+router.get('/:id', getArtPieceById);
 
 // Protected routes
 router.use(protect);
-router.post('/', uploadToS3.single('artImage'), createArtPiece);
+router.post('/', uploadToS3, createArtPiece);
 // Move my-art route here, before any ID patterns, with clear naming
 router.get('/my-artworks', getMyArtPieces);
 router.put('/:id', updateArtPiece);
 router.delete('/:id', deleteArtPiece);
-
-// Public route for getting individual art piece - AFTER specific routes but before the middleware
-router.get('/:id([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', getArtPieceById);
 
 module.exports = router;

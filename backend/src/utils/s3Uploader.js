@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
+const crypto = require('crypto');
 require('dotenv').config();
 
 // Configure AWS SDK
@@ -33,27 +34,75 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const uploadToS3 = multer({
+// First, set up memory storage for processing the file before uploading to S3
+const memoryStorage = multer.memoryStorage();
+
+// Create a two-stage upload process
+const uploadMiddleware = multer({
     fileFilter,
-    storage: multerS3({
-        s3: s3,
-        bucket: process.env.S3_BUCKET_NAME,
-        contentType: multerS3.AUTO_CONTENT_TYPE,
-        metadata: function (req, file, cb) {
-            cb(null, { fieldName: file.fieldname });
-        },
-        key: function (req, file, cb) {
-            // Add user identifier or unique prefix to avoid name collisions
-            const userId = req.user ? req.user.id : 'anonymous';
-            // Sanitize the filename to remove any special characters
-            const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, '-');
-            const filename = `art-uploads/${userId}-${Date.now().toString()}-${sanitizedFilename}`;
-            console.log('Uploading file to S3 with key:', filename);
-            cb(null, filename);
-        }
-    }),
+    storage: memoryStorage, // Store in memory first to process the file
     limits: { fileSize: 1024 * 1024 * 5 } // 5MB file size limit
-});
+}).single('artImage');
+
+// Function to upload a file to S3 from buffer
+const uploadBufferToS3 = (buffer, key, mimetype) => {
+    return new Promise((resolve, reject) => {
+        const params = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: key,
+            Body: buffer,
+            ContentType: mimetype
+        };
+        
+        s3.upload(params, (err, data) => {
+            if (err) {
+                console.error('Error uploading to S3:', err);
+                return reject(err);
+            }
+            resolve(data);
+        });
+    });
+};
+
+// Custom middleware to replace multerS3
+const uploadToS3 = (req, res, next) => {
+    uploadMiddleware(req, res, async (err) => {
+        if (err) {
+            console.error('Multer error:', err);
+            return res.status(400).json({ message: err.message });
+        }
+        
+        // If no file was uploaded, continue
+        if (!req.file) {
+            return next();
+        }
+        
+        try {
+            // Generate a unique filename
+            const userId = req.user ? req.user.id : 'anonymous';
+            const sanitizedFilename = req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '-');
+            const key = `art-uploads/${userId}-${Date.now().toString()}-${sanitizedFilename}`;
+            
+            console.log('Preparing to upload to S3 with key:', key);
+            
+            // Upload to S3
+            const result = await uploadBufferToS3(
+                req.file.buffer,
+                key,
+                req.file.mimetype
+            );
+            
+            // Update the req.file object to match multerS3 structure
+            req.file.key = key;
+            req.file.location = result.Location;
+            
+            next();
+        } catch (error) {
+            console.error('Error in uploadToS3 middleware:', error);
+            res.status(500).json({ message: 'Error uploading file to S3' });
+        }
+    });
+};
 
 // Function to generate a public URL for the uploaded file
 const getPublicUrl = (key) => {

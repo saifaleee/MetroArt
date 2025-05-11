@@ -40,12 +40,8 @@ const ArtPiece = sequelize.define('ArtPiece_YourName', { // Add YourName
   },
 });
 
-ArtPiece.beforeValidate((artPiece) => {
-  if (artPiece.title && artPiece.description && artPiece.artistId && !artPiece.verificationHash) {
-    const dataToHash = `${artPiece.title}-${artPiece.description}-${artPiece.artistId}-${Date.now()}`;
-    artPiece.verificationHash = crypto.createHash('sha256').update(dataToHash).digest('hex');
-  }
-});
+// Hash is now created from the image data directly in the controller
+// No automatic hash generation needed here
 
 User.hasMany(ArtPiece, { foreignKey: 'artistId', as: 'artPieces' });
 ArtPiece.belongsTo(User, { foreignKey: 'artistId', as: 'artist' });

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getArtworkById } from '../services/api';
 import { motion } from 'framer-motion';
 import { FaUser, FaHashtag, FaArrowLeft } from 'react-icons/fa';
 
 const ArtDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [artPiece, setArtPiece] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,9 +14,18 @@ const ArtDetailPage = () => {
   const [directImageUrl, setDirectImageUrl] = useState(null);
 
   useEffect(() => {
+    // Validate ID format to avoid unnecessary API calls
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error("Invalid art piece ID:", id);
+      setError('Invalid art piece ID');
+      setLoading(false);
+      return;
+    }
+
     const fetchArt = async () => {
       try {
         setLoading(true);
+        console.log("Fetching art piece with ID:", id);
         const { data } = await getArtworkById(id);
         console.log("Art detail data:", data);
         setArtPiece(data);
@@ -36,7 +46,7 @@ const ArtDetailPage = () => {
       }
     };
     fetchArt();
-  }, [id]);
+  }, [id, navigate]);
 
   // Create a direct S3 URL as fallback
   const createDirectS3Url = (imagePath) => {
@@ -53,8 +63,24 @@ const ArtDetailPage = () => {
       ></motion.div>
     </div>
   );
-  if (error) return <p className="text-center text-red-400 mt-10">{error}</p>;
-  if (!artPiece) return <p className="text-center text-gray-400 mt-10">Art piece not found.</p>;
+  
+  if (error) return (
+    <div className="text-center py-10">
+      <p className="text-red-400 text-xl mb-6">{error}</p>
+      <Link to="/" className="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700">
+        Return to Gallery
+      </Link>
+    </div>
+  );
+  
+  if (!artPiece) return (
+    <div className="text-center py-10">
+      <p className="text-gray-400 text-xl mb-6">Art piece not found.</p>
+      <Link to="/" className="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700">
+        Return to Gallery
+      </Link>
+    </div>
+  );
 
   return (
     <motion.div 
@@ -122,14 +148,18 @@ const ArtDetailPage = () => {
             {artPiece.description || "No description provided."}
           </p>
 
-          <h2 className="text-xl font-semibold text-gray-200 mt-6 mb-2">Verification Hash</h2>
-          <div className="flex items-center bg-gray-700 p-3 rounded-md">
-            <FaHashtag className="mr-2 text-green-400 flex-shrink-0" />
-            <p className="text-green-300 text-sm break-all select-all">
-              {artPiece.verificationHash}
-            </p>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">This hash is a unique digital fingerprint for the artwork.</p>
+          {artPiece.verificationHash && (
+            <>
+              <h2 className="text-xl font-semibold text-gray-200 mt-6 mb-2">Verification Hash</h2>
+              <div className="flex items-center bg-gray-700 p-3 rounded-md">
+                <FaHashtag className="mr-2 text-green-400 flex-shrink-0" />
+                <p className="text-green-300 text-sm break-all select-all">
+                  {artPiece.verificationHash}
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">This hash is a unique digital fingerprint for the artwork.</p>
+            </>
+          )}
         </motion.div>
       </div>
     </motion.div>
