@@ -16,9 +16,10 @@ const ArtPiece = sequelize.define('ArtPiece_YourName', { // Add YourName
   description: {
     type: DataTypes.TEXT,
   },
-  imageUrl: {
+  imagePath: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'image_path' // Use snake_case for the database column
   },
   verificationHash: {
     type: DataTypes.STRING,

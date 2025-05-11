@@ -6,21 +6,23 @@ const {
   getMyArtPieces,
   updateArtPiece,
   deleteArtPiece,
+  serveImage
 } = require('../controllers/artController');
 const { protect } = require('../middleware/authMiddleware');
 const { uploadToS3 } = require('../utils/s3Uploader');
 
 const router = express.Router();
 
-// Note: uploadToS3.single('artImage') middleware must come before createArtPiece controller
-// It needs req.user for naming, so 'protect' comes first.
-router.post('/', protect, uploadToS3.single('artImage'), createArtPiece);
+// Public routes
+router.get('/', getAllArtPieces);
+router.get('/:id', getArtPieceById);
+router.get('/image/:key', serveImage); // New route for serving images
 
-router.get('/', getAllArtPieces); // Public
-router.get('/my-art', protect, getMyArtPieces); // Protected
-router.get('/:id', getArtPieceById); // Public
-
-router.put('/:id', protect, updateArtPiece);
-router.delete('/:id', protect, deleteArtPiece);
+// Protected routes
+router.use(protect);
+router.post('/', uploadToS3.single('artImage'), createArtPiece);
+router.get('/my-art', getMyArtPieces);
+router.put('/:id', updateArtPiece);
+router.delete('/:id', deleteArtPiece);
 
 module.exports = router;
