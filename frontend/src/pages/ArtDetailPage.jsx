@@ -9,12 +9,14 @@ const ArtDetailPage = () => {
   const [artPiece, setArtPiece] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchArt = async () => {
       try {
         setLoading(true);
         const { data } = await getArtworkById(id);
+        console.log("Art detail data:", data);
         setArtPiece(data);
         setError(null);
       } catch (err) {
@@ -26,6 +28,12 @@ const ArtDetailPage = () => {
     };
     fetchArt();
   }, [id]);
+
+  // Create a direct S3 URL as fallback
+  const createDirectS3Url = (imagePath) => {
+    if (!imagePath) return null;
+    return `https://s3.amazonaws.com/metro-art/${imagePath}`;
+  };
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -55,13 +63,35 @@ const ArtDetailPage = () => {
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          className="w-full"
         >
-          <img 
-            src={artPiece.imageUrl} 
-            alt={artPiece.title} 
-            className="w-full h-auto max-h-[70vh] object-contain rounded-lg shadow-lg"
-            onError={(e) => { e.target.onerror = null; e.target.src="https://via.placeholder.com/600x800?text=Image+Error"; }}
-          />
+          {!imageError ? (
+            <img 
+              src={artPiece.imageUrl} 
+              alt={artPiece.title} 
+              className="w-full h-auto max-h-[70vh] object-contain rounded-lg shadow-lg"
+              onError={(e) => { 
+                console.error(`Failed to load detail image: ${artPiece.imageUrl}`);
+                setImageError(true);
+                
+                // Try direct S3 URL as fallback
+                if (artPiece.imagePath) {
+                  const directUrl = createDirectS3Url(artPiece.imagePath);
+                  if (directUrl && directUrl !== artPiece.imageUrl) {
+                    e.target.src = directUrl;
+                  } else {
+                    e.target.src = "https://via.placeholder.com/600x800?text=Image+Error";
+                  }
+                } else {
+                  e.target.src = "https://via.placeholder.com/600x800?text=Image+Error";
+                }
+              }}
+            />
+          ) : (
+            <div className="w-full h-[50vh] bg-gray-700 rounded-lg flex items-center justify-center">
+              <span className="text-gray-400">Image not available</span>
+            </div>
+          )}
         </motion.div>
         <motion.div
           initial={{ x: 50, opacity: 0 }}

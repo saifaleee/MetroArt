@@ -54,9 +54,6 @@ function App() {
           {/* Add a 404 page later */}
         </Routes>
       </main>
-       <footer className="text-center py-4 text-sm text-gray-500">
-        Digital Art Showcase - Deployed by YOUR_NAME
-      </footer>
     </div>
   );
 }

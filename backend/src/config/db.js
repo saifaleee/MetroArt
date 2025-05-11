@@ -24,7 +24,7 @@ if (!dbUrl) {
 
 const sequelize = new Sequelize(dbUrl, {
   dialect: 'postgres',
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  logging: process.env.NODE_ENV === 'development' && process.env.SQL_DEBUG === 'true' ? console.log : false,
   dialectOptions: {
     ssl: process.env.NODE_ENV === 'production' ? { require: true, rejectUnauthorized: false } : false // Adjust for RDS SSL
   }

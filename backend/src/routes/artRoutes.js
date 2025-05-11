@@ -15,14 +15,16 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getAllArtPieces);
-router.get('/:id', getArtPieceById);
-router.get('/image/:key', serveImage); // New route for serving images
+router.get('/image/:key', serveImage); // Route for serving images
 
 // Protected routes
 router.use(protect);
 router.post('/', uploadToS3.single('artImage'), createArtPiece);
-router.get('/my-art', getMyArtPieces);
+router.get('/my-art', getMyArtPieces); // Make sure this is BEFORE the /:id route
 router.put('/:id', updateArtPiece);
 router.delete('/:id', deleteArtPiece);
+
+// This should be LAST to prevent conflicts with named routes
+router.get('/:id', getArtPieceById);
 
 module.exports = router;

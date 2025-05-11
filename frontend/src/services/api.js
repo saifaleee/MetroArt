@@ -10,9 +10,32 @@ apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('artToken_yourname'); // Add your name
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('Token found and added to request headers');
+  } else {
+    console.warn('No authentication token found in localStorage');
   }
   return config;
 });
+
+// Add response interceptor to log errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      console.error('API Error:', {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers,
+        url: error.config.url
+      });
+    } else if (error.request) {
+      console.error('API Request Error (No response):', error.request);
+    } else {
+      console.error('API Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth Services
 export const register = (userData) => apiClient.post('/auth-yourname/register', userData);
@@ -21,7 +44,10 @@ export const getMe = () => apiClient.get('/auth-yourname/me');
 
 // Art Services
 export const getAllArtworks = () => apiClient.get('/art-yourname');
-export const getUserArtworks = () => apiClient.get('/art-yourname/my-art');
+export const getUserArtworks = () => {
+  console.log('Calling getUserArtworks to:', `${API_URL}/art-yourname/my-art`);
+  return apiClient.get('/art-yourname/my-art');
+};
 export const getArtworkById = (id) => apiClient.get(`/art-yourname/${id}`);
 
 // For creating art with file upload, use FormData

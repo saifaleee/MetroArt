@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom'; // If you have a detail page
 import { FaUser, FaHashtag, FaEdit, FaTrash } from 'react-icons/fa';
@@ -6,6 +6,14 @@ import { FaUser, FaHashtag, FaEdit, FaTrash } from 'react-icons/fa';
 const ArtCard = ({ art, artwork, showActions, onDelete }) => {
   // Support both prop naming styles
   const item = artwork || art;
+  const [imageError, setImageError] = useState(false);
+  
+  useEffect(() => {
+    if (item) {
+      console.log('ArtCard rendering item:', item);
+      console.log('Image URL:', item.imageUrl);
+    }
+  }, [item]);
   
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -16,18 +24,48 @@ const ArtCard = ({ art, artwork, showActions, onDelete }) => {
     return null;
   }
 
+  // Create a direct S3 URL as fallback
+  const createDirectS3Url = (imagePath) => {
+    if (!imagePath) return null;
+    return `https://s3.amazonaws.com/metro-art/${imagePath}`;
+  };
+
   return (
     <motion.div
       variants={itemVariants}
       className="bg-gray-800 rounded-lg shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300 ease-in-out"
     >
       <Link to={`/art/${item.id}`} className="block"> {/* Link to detail page */}
-        <img 
-          src={item.imageUrl} 
-          alt={item.title} 
-          className="w-full h-64 object-cover" 
-          onError={(e) => { e.target.onerror = null; e.target.src="https://via.placeholder.com/400x300?text=Image+Not+Found"; }} // Fallback image
-        />
+        <div className="relative w-full h-64 bg-gray-900">
+          {!imageError ? (
+            <img 
+              src={item.imageUrl} 
+              alt={item.title} 
+              className="w-full h-64 object-cover" 
+              width="400"
+              height="300"
+              onError={(e) => { 
+                console.error(`Failed to load image: ${item.imageUrl}`); 
+                setImageError(true);
+                // Try direct S3 URL as fallback
+                if (item.imagePath) {
+                  const directUrl = createDirectS3Url(item.imagePath);
+                  if (directUrl && directUrl !== item.imageUrl) {
+                    e.target.src = directUrl;
+                  } else {
+                    e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Found";
+                  }
+                } else {
+                  e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Found";
+                }
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-gray-700">
+              <span className="text-gray-400">Image not available</span>
+            </div>
+          )}
+        </div>
       </Link>
       <div className="p-6">
         <h3 className="text-2xl font-semibold text-white mb-2">{item.title}</h3>

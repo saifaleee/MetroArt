@@ -38,7 +38,6 @@ const uploadToS3 = multer({
     storage: multerS3({
         s3: s3,
         bucket: process.env.S3_BUCKET_NAME,
-        acl: 'public-read',
         contentType: multerS3.AUTO_CONTENT_TYPE,
         metadata: function (req, file, cb) {
             cb(null, { fieldName: file.fieldname });
@@ -61,14 +60,21 @@ const getPublicUrl = (key) => {
     if (!key) return null;
     
     try {
-        // Standard S3 URL format: https://{bucket-name}.s3.{region}.amazonaws.com/{key}
-        const url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+        // Generate a presigned URL that will work even with CORS restrictions
+        const signedUrl = s3.getSignedUrl('getObject', {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: key,
+            Expires: 60 * 60 * 24 * 7 // URL expires in 7 days
+        });
         
-        console.log('Generated URL for key:', key, '=>', url);
-        return url;
+        console.log('Generated signed URL for key:', key, '=>', signedUrl);
+        return signedUrl;
     } catch (error) {
         console.error('Error generating public URL:', error);
-        return null;
+        // Fallback to standard URL if presigned URL fails
+        const url = `https://s3.${process.env.AWS_REGION}.amazonaws.com/${process.env.S3_BUCKET_NAME}/${key}`;
+        console.log('Falling back to standard URL:', url);
+        return url;
     }
 };
 

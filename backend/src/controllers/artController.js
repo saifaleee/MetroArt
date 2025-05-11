@@ -168,8 +168,21 @@ exports.getMyArtPieces = async (req, res) => {
             include: [{ model: User, as: 'artist', attributes: ['id', 'username'] }],
             order: [['createdAt', 'DESC']],
         });
-        res.json(artPieces);
+
+        // Add full image URLs to each art piece - similar to getAllArtPieces
+        const artPiecesWithUrls = artPieces.map(artPiece => {
+            const artPieceData = artPiece.toJSON();
+            const imageUrl = artPieceData.imagePath ? getPublicUrl(artPieceData.imagePath) : null;
+            
+            return {
+                ...artPieceData,
+                imageUrl: imageUrl
+            };
+        });
+        
+        res.json(artPiecesWithUrls);
     } catch (error) {
+        console.error('Error fetching user art pieces:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
     }
 };

@@ -56,7 +56,7 @@ const HomePage = () => {
     >
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-          Welcome to the Digital Art Showcase
+          Welcome to MetroArt
         </h1>
         <p className="text-lg text-gray-400 mt-2">Discover unique digital creations by artists from around the platform.</p>
       </div>

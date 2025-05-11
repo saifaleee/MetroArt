@@ -23,7 +23,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6 py-3 flex justify-between items-center">
         <Link to="/" className="flex items-center text-xl font-semibold text-white hover:text-blue-400 transition-colors">
           <FaPalette className="mr-2 text-blue-400" />
-          ArtShowcase <span className="text-xs ml-1 text-gray-400">YOUR_NAME</span>
+          MetroArt
         </Link>
         <div className="flex items-center space-x-4">
           {user ? (

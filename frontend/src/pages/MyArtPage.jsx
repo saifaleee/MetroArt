@@ -17,10 +17,19 @@ const MyArtPage = () => {
       try {
         setLoading(true);
         const response = await getUserArtworks();
+        console.log('Art data received:', response.data);
         setArtworks(response.data);
         setError(null);
       } catch (err) {
-        setError('Failed to load your artworks. Please try again later.');
+        const errorMsg = err.response?.data?.message || 'Failed to load your artworks. Please try again later.';
+        setError(errorMsg);
+        
+        // Check token status
+        const token = localStorage.getItem('artToken_yourname');
+        if (!token) {
+          console.error('Authentication token missing. User might need to log in again.');
+        }
+        
         console.error('Error fetching artworks:', err);
       } finally {
         setLoading(false);
