@@ -112,14 +112,3 @@ Refer to the Cloud_Deployment.md file for detailed step-by-step instructions on 
 * Full-stack frameworks that merge backend and frontend (e.g., Next.js full-stack mode) were not used.
 * All resource names on AWS should include your name/group identifier for tracking.
 * Focus on using AWS Free Tier eligible services where possible, but monitor billing.
-
----
-
-This is a massive undertaking! Remember to:
-1. **Fill in ALL placeholders** like `YOUR_NAME`, `your-region`, `your-aws-account-id`, S3 bucket names, database credentials, JWT secrets, etc.
-2. **Test each step locally** before moving to cloud deployment.
-3. **Take screenshots** as you go through the AWS console steps for your PDF documentation.
-4. **Create an architecture diagram.** Tools like diagrams.net (draw.io) are great for this.
-5. **Start early!** This will take time to implement and debug.
-
-Good luck with your project! 
