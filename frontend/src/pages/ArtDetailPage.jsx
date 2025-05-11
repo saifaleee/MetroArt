@@ -10,6 +10,7 @@ const ArtDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [directImageUrl, setDirectImageUrl] = useState(null);
 
   useEffect(() => {
     const fetchArt = async () => {
@@ -18,10 +19,18 @@ const ArtDetailPage = () => {
         const { data } = await getArtworkById(id);
         console.log("Art detail data:", data);
         setArtPiece(data);
+        
+        // Pre-create the direct URL as a backup
+        if (data && data.imagePath) {
+          const directUrl = createDirectS3Url(data.imagePath);
+          setDirectImageUrl(directUrl);
+          console.log("Created direct S3 URL:", directUrl);
+        }
+        
         setError(null);
       } catch (err) {
+        console.error("Error fetching art piece:", err);
         setError('Failed to fetch art piece details.');
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -32,7 +41,7 @@ const ArtDetailPage = () => {
   // Create a direct S3 URL as fallback
   const createDirectS3Url = (imagePath) => {
     if (!imagePath) return null;
-    return `https://s3.amazonaws.com/metro-art/${imagePath}`;
+    return `https://s3.ap-southeast-2.amazonaws.com/metro-art/${imagePath}`;
   };
 
   if (loading) return (
@@ -67,21 +76,22 @@ const ArtDetailPage = () => {
         >
           {!imageError ? (
             <img 
-              src={artPiece.imageUrl} 
+              src={artPiece.imageUrl || directImageUrl} 
               alt={artPiece.title} 
-              className="w-full h-auto max-h-[70vh] object-contain rounded-lg shadow-lg"
+              className="w-full h-auto max-h-[70vh] object-contain rounded-lg shadow-lg bg-gray-700"
+              onLoad={() => console.log("Image loaded successfully:", artPiece.imageUrl || directImageUrl)}
               onError={(e) => { 
                 console.error(`Failed to load detail image: ${artPiece.imageUrl}`);
                 setImageError(true);
                 
-                // Try direct S3 URL as fallback
-                if (artPiece.imagePath) {
-                  const directUrl = createDirectS3Url(artPiece.imagePath);
-                  if (directUrl && directUrl !== artPiece.imageUrl) {
-                    e.target.src = directUrl;
-                  } else {
-                    e.target.src = "https://via.placeholder.com/600x800?text=Image+Error";
-                  }
+                // Try direct S3 URL as fallback if not already tried
+                if (directImageUrl && (!artPiece.imageUrl || artPiece.imageUrl !== directImageUrl)) {
+                  console.log("Trying direct S3 URL fallback:", directImageUrl);
+                  e.target.src = directImageUrl;
+                  e.target.onerror = (finalError) => {
+                    console.error("Direct S3 URL also failed:", directImageUrl);
+                    finalError.target.src = "https://via.placeholder.com/600x800?text=Image+Error";
+                  };
                 } else {
                   e.target.src = "https://via.placeholder.com/600x800?text=Image+Error";
                 }

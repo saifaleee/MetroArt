@@ -7,11 +7,17 @@ const ArtCard = ({ art, artwork, showActions, onDelete }) => {
   // Support both prop naming styles
   const item = artwork || art;
   const [imageError, setImageError] = useState(false);
+  const [directImageUrl, setDirectImageUrl] = useState(null);
   
   useEffect(() => {
     if (item) {
       console.log('ArtCard rendering item:', item);
-      console.log('Image URL:', item.imageUrl);
+      
+      // Create direct URL immediately as a backup
+      if (item.imagePath) {
+        const directUrl = createDirectS3Url(item.imagePath);
+        setDirectImageUrl(directUrl);
+      }
     }
   }, [item]);
   
@@ -27,7 +33,7 @@ const ArtCard = ({ art, artwork, showActions, onDelete }) => {
   // Create a direct S3 URL as fallback
   const createDirectS3Url = (imagePath) => {
     if (!imagePath) return null;
-    return `https://s3.amazonaws.com/metro-art/${imagePath}`;
+    return `https://s3.ap-southeast-2.amazonaws.com/metro-art/${imagePath}`;
   };
 
   return (
@@ -39,22 +45,23 @@ const ArtCard = ({ art, artwork, showActions, onDelete }) => {
         <div className="relative w-full h-64 bg-gray-900">
           {!imageError ? (
             <img 
-              src={item.imageUrl} 
+              src={item.imageUrl || directImageUrl} 
               alt={item.title} 
               className="w-full h-64 object-cover" 
               width="400"
               height="300"
+              onLoad={() => console.log(`Image loaded for ${item.title}:`, item.imageUrl || directImageUrl)}
               onError={(e) => { 
-                console.error(`Failed to load image: ${item.imageUrl}`); 
+                console.error(`Failed to load card image: ${item.imageUrl}`);
                 setImageError(true);
-                // Try direct S3 URL as fallback
-                if (item.imagePath) {
-                  const directUrl = createDirectS3Url(item.imagePath);
-                  if (directUrl && directUrl !== item.imageUrl) {
-                    e.target.src = directUrl;
-                  } else {
+                
+                // Try direct S3 URL as fallback if not already tried
+                if (directImageUrl && directImageUrl !== item.imageUrl) {
+                  console.log("Trying direct URL:", directImageUrl);
+                  e.target.src = directImageUrl;
+                  e.target.onerror = () => {
                     e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Found";
-                  }
+                  };
                 } else {
                   e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Found";
                 }

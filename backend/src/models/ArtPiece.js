@@ -25,6 +25,11 @@ const ArtPiece = sequelize.define('ArtPiece_YourName', { // Add YourName
     type: DataTypes.STRING,
     allowNull: false,
   },
+  isPublished: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    field: 'is_published' 
+  },
   artistId: { // Foreign key
     type: DataTypes.UUID,
     references: {

@@ -45,8 +45,8 @@ export const getMe = () => apiClient.get('/auth-yourname/me');
 // Art Services
 export const getAllArtworks = () => apiClient.get('/art-yourname');
 export const getUserArtworks = () => {
-  console.log('Calling getUserArtworks to:', `${API_URL}/art-yourname/my-art`);
-  return apiClient.get('/art-yourname/my-art');
+  console.log('Calling getUserArtworks to:', `${API_URL}/art-yourname/my-artworks`);
+  return apiClient.get('/art-yourname/my-artworks');
 };
 export const getArtworkById = (id) => apiClient.get(`/art-yourname/${id}`);
 

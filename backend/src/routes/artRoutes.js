@@ -20,11 +20,12 @@ router.get('/image/:key', serveImage); // Route for serving images
 // Protected routes
 router.use(protect);
 router.post('/', uploadToS3.single('artImage'), createArtPiece);
-router.get('/my-art', getMyArtPieces); // Make sure this is BEFORE the /:id route
+// Move my-art route here, before any ID patterns, with clear naming
+router.get('/my-artworks', getMyArtPieces);
 router.put('/:id', updateArtPiece);
 router.delete('/:id', deleteArtPiece);
 
-// This should be LAST to prevent conflicts with named routes
-router.get('/:id', getArtPieceById);
+// Public route for getting individual art piece - AFTER specific routes but before the middleware
+router.get('/:id([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', getArtPieceById);
 
 module.exports = router;
